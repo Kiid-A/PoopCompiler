@@ -10,7 +10,6 @@ int char_count = 0; // 用于统计字符总数
 int keyword_count = 0; // 用于统计关键字个数
 int id_count = 0; // 用于统计标识符个数
 int op_count = 0; // 用于统计OP个数
-int comment_error = 0;
 
 // 记录注释起始位置（仅适用于文件输入）
 long comment_start_pos = 0;
@@ -18,12 +17,6 @@ int comment_start_line = 0;
 int comment_start_char = 0;
 
 #define PRINT_TOKEN(type) { printf("%s: %s\n", type, yytext); char_count += yyleng;}                        
-
-#define RESET_COMMENT_START { \
-    comment_start_pos = 0; \
-    comment_start_line = 0; \
-    comment_start_char = 0; \
-}
 %}
 
 INCLUDE     #include
@@ -35,20 +28,7 @@ KEYWORD    (auto|break|case|char|const|continue|default|do|double|else|enum|exte
 
 %%
 {WHITE_SPACE}+  { char_count += yyleng; } // 统计空格字符
-"/*" {
-    if (comment_error) {
-        // 若已处于注释错误状态，直接报错并消耗 "/*"
-        printf("ERROR: Unclosed comment at line %d\n", line_num);
-        char_count += yyleng;
-        comment_error = 0;  // 重置标志
-    } else {
-        // 记录注释起始位置
-        comment_start_pos = ftell(yyin);
-        comment_start_line = line_num;
-        comment_start_char = char_count;
-        jump_comment();  // 进入注释处理
-    }
-}
+"/*"            { jump_comment(); }
 "//"[^\n]*      { char_count += yyleng; } // 统计单行注释
 {DIGIT}+        { PRINT_TOKEN("IntNum"); }
 {DIGIT}+{DOT}{DIGIT}*   { PRINT_TOKEN("FloatNum"); }

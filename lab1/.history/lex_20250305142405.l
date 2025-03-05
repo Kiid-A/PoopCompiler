@@ -132,7 +132,7 @@ int yywrap()
     return 1;
 }
 
-void jump_comment(void)
+/* void jump_comment(void)
 {
     int beggining = line_num;
     char c, prev = 0;
@@ -148,4 +148,4 @@ void jump_comment(void)
     yyless(0); // 将当前 token 的输入流回退到注释开始的位置
     line_num = beggining; // 恢复行号
     return;
-}
+} */

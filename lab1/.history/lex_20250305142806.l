@@ -132,7 +132,7 @@ int yywrap()
     return 1;
 }
 
-void jump_comment(void)
+/* void jump_comment(void)
 {
     int beggining = line_num;
     char c, prev = 0;
@@ -148,4 +148,30 @@ void jump_comment(void)
     yyless(0); // 将当前 token 的输入流回退到注释开始的位置
     line_num = beggining; // 恢复行号
     return;
+} */
+
+void jump_comment(void) {
+    char c, prev = 0;
+    int in_star = 0; // 标记是否找到'*'
+    while ((c = yyinput()) != 0) {
+        if (c == '*' && prev == '/') {
+            in_star = 1;
+            break;
+        }
+        prev = c;
+    }
+    if (!in_star) {
+        // 如果注释没有闭合，自动补全注释并继续分析
+        printf("ERROR: Unterminated comment starting at line: %d\n", line_num);
+        // 模拟注释结束，继续分析
+        yymore(); // 使 yyinput() 再次读取 '/'
+        char next_char = yyinput();
+        if (next_char == '/') {
+            // 如果下一个字符是 '/', 则注释结束
+            yyless(0); // 回退一个字符，使 yyinput() 再次读取 '/'
+        } else {
+            // 如果下一个字符不是 '/', 则继续分析
+            yyless(1); // 回退一个字符，使 yyinput() 再次读取 '*'
+        }
+    }
 }

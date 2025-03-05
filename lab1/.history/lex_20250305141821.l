@@ -10,7 +10,6 @@ int char_count = 0; // 用于统计字符总数
 int keyword_count = 0; // 用于统计关键字个数
 int id_count = 0; // 用于统计标识符个数
 int op_count = 0; // 用于统计OP个数
-int comment_error = 0;
 
 // 记录注释起始位置（仅适用于文件输入）
 long comment_start_pos = 0;
@@ -26,15 +25,6 @@ int comment_start_char = 0;
 }
 %}
 
-INCLUDE     #include
-WHITE_SPACE [\ \t\b\f]
-DIGIT      [0-9]+
-ID         [a-zA-Z_][a-zA-Z0-9_]*
-DOT         \.
-KEYWORD    (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while)
-
-%%
-{WHITE_SPACE}+  { char_count += yyleng; } // 统计空格字符
 "/*" {
     if (comment_error) {
         // 若已处于注释错误状态，直接报错并消耗 "/*"
@@ -49,6 +39,17 @@ KEYWORD    (auto|break|case|char|const|continue|default|do|double|else|enum|exte
         jump_comment();  // 进入注释处理
     }
 }
+
+INCLUDE     #include
+WHITE_SPACE [\ \t\b\f]
+DIGIT      [0-9]+
+ID         [a-zA-Z_][a-zA-Z0-9_]*
+DOT         \.
+KEYWORD    (auto|break|case|char|const|continue|default|do|double|else|enum|extern|float|for|goto|if|inline|int|long|register|restrict|return|short|signed|sizeof|static|struct|switch|typedef|union|unsigned|void|volatile|while)
+
+%%
+{WHITE_SPACE}+  { char_count += yyleng; } // 统计空格字符
+"/*"            { jump_comment(); }
 "//"[^\n]*      { char_count += yyleng; } // 统计单行注释
 {DIGIT}+        { PRINT_TOKEN("IntNum"); }
 {DIGIT}+{DOT}{DIGIT}*   { PRINT_TOKEN("FloatNum"); }

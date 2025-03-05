@@ -132,7 +132,7 @@ int yywrap()
     return 1;
 }
 
-void jump_comment(void)
+/* void jump_comment(void)
 {
     int beggining = line_num;
     char c, prev = 0;
@@ -148,4 +148,36 @@ void jump_comment(void)
     yyless(0); // 将当前 token 的输入流回退到注释开始的位置
     line_num = beggining; // 恢复行号
     return;
+} */
+
+void jump_comment(void) {
+    char c, prev = 0;
+    int found = 0;
+
+    // 读取字符直到找到 "*/" 或 EOF
+    while ((c = yyinput()) != 0) {
+        if (c == '\n') line_num++;
+        char_count++;
+        if (c == '/' && prev == '*') {
+            found = 1;
+            break;
+        }
+        prev = c;
+    }
+
+    if (!found) {
+        // 未找到闭合，回退到注释起始位置
+        printf("ERROR: Unterminated comment starting at line: %d\n", comment_start_line);
+
+        // 仅当输入是文件时回退
+        if (yyin && comment_start_pos != -1) {
+            fseek(yyin, comment_start_pos, SEEK_SET);
+            yyrestart(yyin);  // 重置 Flex 输入缓冲区
+            line_num = comment_start_line;
+            char_count = comment_start_char;
+            comment_error = 1;  // 设置错误标志
+        }
+    }
+
+    RESET_COMMENT_START;  // 清除注释起始记录
 }

@@ -1,0 +1,1 @@
+./lex ./test/test.c
