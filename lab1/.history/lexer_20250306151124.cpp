@@ -203,7 +203,7 @@ void Lexer::analyze() {
 
     while (buffer_[cur_] != EOF) {
         // debug
-        printf("line: %d buffer: %lu char: %c\n", 
+        printf("line: %d buffer: %lu\n char: %c", 
                 lines_, buffer_.size(), buffer_[cur_]);
         char c = buffer_[cur_];
         
@@ -339,7 +339,7 @@ void Lexer::PrintTokens() const {
             case TOKEN_PUNCTUATION: type_str = "PUNCTUATION"; break;
             case TOKEN_COMMENT:     type_str = "COMMENT"; break;
             case TOKEN_EOF:         type_str = "EOF"; break;
-            case TOKEN_ERROR:       type_str = "ERROR"; break; // 红色高亮
+            case TOKEN_ERROR:       type_str = "\033[31mERROR\033[0m"; break; // 红色高亮
             default:                type_str = "UNKNOWN";
         }
 

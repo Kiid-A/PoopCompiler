@@ -203,7 +203,7 @@ void Lexer::analyze() {
 
     while (buffer_[cur_] != EOF) {
         // debug
-        printf("line: %d buffer: %lu char: %c\n", 
+        printf("line: %d buffer: %lu\n char: %c", 
                 lines_, buffer_.size(), buffer_[cur_]);
         char c = buffer_[cur_];
         

@@ -83,7 +83,7 @@ private:
     }
 
     bool isOpChar(char c) {
-        static const std::string ops = "+-*/%=&|^~<>!.[](){};:?,";
+        static const std::string ops = "+-*/%=&|^~<>!.[]{};:?";
         return ops.find(c) != std::string::npos;
     }
 

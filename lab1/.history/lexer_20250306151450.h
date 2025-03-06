@@ -53,8 +53,7 @@ private:
     const std::vector<std::string> operators = {
         "+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "&&", 
         "||", "!", "&", "|", "^", "~", "<<", ">>", ".", "->", "[", "]", "{", "}",
-        ":", "?", "=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|=",
-        "(", ")", ";"
+        ":", "?", "=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|="
     };
     const std::vector<char> whitespace = {
         ' ', '\t', '\b', '\f'
@@ -83,7 +82,7 @@ private:
     }
 
     bool isOpChar(char c) {
-        static const std::string ops = "+-*/%=&|^~<>!.[](){};:?,";
+        static const std::string ops = "+-*/%=&|^~<>!.[]{}";
         return ops.find(c) != std::string::npos;
     }
 
