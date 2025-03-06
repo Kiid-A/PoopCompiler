@@ -1,0 +1,2 @@
+gcc -o lex lex.cpp -lfl -lstdc++
+g++ -o lex lex.cpp -lfl

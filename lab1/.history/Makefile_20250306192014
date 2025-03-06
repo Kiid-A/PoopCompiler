@@ -1,0 +1,2 @@
+g++ -std=c++17 -o lexer lexer.cpp
+g++ -o lex lex.cpp -lfl

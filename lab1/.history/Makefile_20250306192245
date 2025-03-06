@@ -1,7 +1,9 @@
+# 编译器配置
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 LDFLAGS = -lfl
 
+# 目标文件
 TARGETS = lexer lex
 SRCS = lexer.cpp lex.cpp
 OBJS = $(SRCS:.cpp=.o)

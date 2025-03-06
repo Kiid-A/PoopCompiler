@@ -1,0 +1,1 @@
+flex --outfile lex.cpp --header-file=lex.h lex.l

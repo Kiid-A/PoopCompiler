@@ -1,0 +1,12 @@
+# 定义编译器
+CXX = g++
+
+CXXFLAGS = -Wall -std=c+++ -lfl
+
+TARGET = lex
+
+$(TARGET): lex.cpp
+	$(CXX) $(CXXFLAGS) -o $@ $<
+
+clean:
+	rm -f $(TARGET)

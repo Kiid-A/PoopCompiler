@@ -1,3 +1,4 @@
+# 编译器配置
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -pedantic
 LDFLAGS = -lfl
