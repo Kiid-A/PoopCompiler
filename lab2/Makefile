@@ -11,34 +11,44 @@ RELEASE_FLAGS = -O2
 SRC_DIR = src
 TEST_DIR = test
 
-# 可执行文件名称
-EXECUTABLE = ll1_test
+# 可执行文件名称前缀
+EXECUTABLE_PREFIX = ""
 
 # 源文件和目标文件
 SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(SRC_DIR)/%.o, $(SRC_FILES))
-TEST_FILE = $(TEST_DIR)/ll1_test.cpp
-TEST_OBJ = $(TEST_DIR)/ll1_test.o
+
+# 测试文件和目标文件
+TEST_FILES = $(wildcard $(TEST_DIR)/*.cpp)
+TEST_EXECUTABLES = $(patsubst $(TEST_DIR)/%.cpp, $(EXECUTABLE_PREFIX)%, $(TEST_FILES))
+TEST_OBJS = $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_FILES))
+
+# 自动生成的依赖文件
+DEPS = $(patsubst $(SRC_DIR)/%.cpp, $(SRC_DIR)/%.d, $(SRC_FILES)) \
+       $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%.d, $(TEST_FILES))
 
 # 默认目标，生成发布版本
-all: $(EXECUTABLE)
+all: $(TEST_EXECUTABLES)
 
 # 链接生成可执行文件
-$(EXECUTABLE): $(OBJ_FILES) $(TEST_OBJ)
+$(EXECUTABLE_PREFIX)%: $(TEST_DIR)/%.o $(OBJ_FILES)
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ $^
 
 # 编译源文件
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp $(SRC_DIR)/%.hpp
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -c -o $@ $<
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -MMD -MP -c -o $@ $<
 
 # 编译测试文件
-$(TEST_OBJ): $(TEST_FILE)
-	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -c -o $@ $<
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -MMD -MP -c -o $@ $<
 
 # 调试目标
 debug: CXXFLAGS += $(DEBUG_FLAGS)
-debug: $(EXECUTABLE)
+debug: $(TEST_EXECUTABLES)
 
 # 清理目标
 clean:
-	rm -f $(SRC_DIR)/*.o $(TEST_DIR)/*.o $(EXECUTABLE)
+	rm -f $(SRC_DIR)/*.o $(TEST_DIR)/*.o $(TEST_EXECUTABLES) $(DEPS)
+
+# 包含自动生成的依赖文件
+-include $(DEPS)

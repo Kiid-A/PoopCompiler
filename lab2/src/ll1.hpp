@@ -19,7 +19,7 @@ private:
     RC parse_follow(std::vector<Production>& res);
     // help function that compute first set of that symbol
     std::unordered_set<Symbol> compute_first_sequence(const std::vector<Symbol>& symbols);
-    // 
+    // make table
     RC build_table(std::vector<Production>& res);
 
 public:

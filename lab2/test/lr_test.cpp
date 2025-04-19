@@ -1,5 +1,4 @@
-#include "../src/ll1.hpp"
-
+#include "../src/lr.hpp"
 
 int main() {
     Symbol E("E", false), T("T", false), F("F", false);
@@ -18,9 +17,8 @@ int main() {
         Production(F, {num}),
     };
 
-    ParserLL1 parser(prods);
-    
-    parser.print_sets_and_table();
+    ParserLR parser(prods);
+    parser.print_tables();
 
     std::vector<Symbol> input = {num, plus, num, mult, num};
     RC result = parser.analyse(input);
@@ -33,3 +31,4 @@ int main() {
 
     return 0;
 }
+
