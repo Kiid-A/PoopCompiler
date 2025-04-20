@@ -181,7 +181,7 @@ void ParserLR::construct_canonical_collection(const std::vector<Production>& aug
                     next_identity = *it;
                 }
                 if (symbol.is_terminal()) {
-                    action_table_[current.id()][symbol] = Move(next_identity.id(), Move::MoveType::Jump);
+                    action_table_[current.id()][symbol] = Move(next_identity.id(), Move::MoveType::Shift);
                 } else {
                     goto_table_[current.id()][symbol] = next_identity.id();
                 }
@@ -205,7 +205,9 @@ void ParserLR::build_tables(const std::vector<Production>& augmented_prods) {
                 if (item.prod().left().self() == "S") {
                     action_table_[identity.id()][END] = Move(-1, Move::MoveType::End);
                 } else {
-                    int prod_index = std::find(augmented_prods.begin(), augmented_prods.end(), item.prod()) - augmented_prods.begin();
+                    int prod_index = std::find(augmented_prods.begin(), 
+                                augmented_prods.end(), 
+                                 item.prod()) - augmented_prods.begin();
                     for (const auto& follow_symbol : follow_set[item.prod().left()]) {
                         action_table_[identity.id()][follow_symbol] = Move(prod_index, Move::MoveType::Reduce);
                     }
@@ -215,57 +217,143 @@ void ParserLR::build_tables(const std::vector<Production>& augmented_prods) {
     }
 }
 
+// RC ParserLR::analyse(std::vector<Symbol>& input) {
+//     input.push_back(END);
+//     std::vector<int> state_stack = {0};
+//     std::vector<Symbol> symbol_stack = {END};
+//     size_t index = 0;
+
+//     while (true) {
+//         std::cout << "\n";
+//         int current_state = state_stack.back();
+//         Symbol current_symbol = input[index];
+//         std::cout << "current: ";
+//         for (int i = 0; i < index; i++) {
+//             std::cout << input[i].self() << " ";
+//         }
+//         std::cout << "\n" << "left: ";
+//         for (int i = index; i < input.size(); i++) {
+//             std::cout << input[i].self() << " ";
+//         }
+//         std::cout << "\n";
+//         auto action_it = action_table_[current_state].find(current_symbol);
+//         if (action_it == action_table_[current_state].end()) {
+//             return RC::FAILED;
+//         }
+
+//         Move move = action_it->second;
+//         switch (move.type()) {
+//             case Move::MoveType::Shift:
+//                 std::cout << "Shift: " << move.id() << std::endl;
+//                 state_stack.push_back(move.id());
+//                 symbol_stack.push_back(current_symbol);
+//                 index++;
+//                 break;
+//             case Move::MoveType::Reduce: {
+//                 std::cout << "Reduce: " << move.id() << std::endl;
+//                 Production prod = augmented_prods_[move.id()];
+//                 const auto& rhs = prod.right().self();
+//                 for (size_t i = 0; i < rhs.size(); ++i) {
+//                     state_stack.pop_back();
+//                     symbol_stack.pop_back();
+//                 }
+//                 int prev_state = state_stack.back();
+//                 Symbol left = prod.left();
+//                 auto goto_it = goto_table_[prev_state].find(left);
+//                 if (goto_it == goto_table_[prev_state].end()) {
+//                     return RC::FAILED;
+//                 }
+//                 int next_state = goto_it->second;
+//                 state_stack.push_back(next_state);
+//                 symbol_stack.push_back(left);
+//                 break;
+//             }
+//             case Move::MoveType::End:
+//                 if (input[index].cmp(END)) {
+//                     return RC::SUCCESS;
+//                 } else {
+//                     return RC::FAILED;
+//                 }
+//             default:
+//                 return RC::FAILED;
+//         }
+//     }
+//     return RC::FAILED;
+// }
+
 RC ParserLR::analyse(std::vector<Symbol>& input) {
     input.push_back(END);
     std::vector<int> state_stack = {0};
     std::vector<Symbol> symbol_stack = {END};
     size_t index = 0;
-
+    std::cout << "LR Parsing Process:" << std::endl;
+    std::cout << std::left << std::setw(20) << "State Stack" << std::setw(20) << "Symbol Stack" << std::setw(20) << "Input" << std::setw(20) << "Action" << std::endl;
     while (true) {
         int current_state = state_stack.back();
         Symbol current_symbol = input[index];
-        std::cout << "current: " << current_symbol.self() << ", ";
+
+        std::string state_stack_str = "";
+        for (int state : state_stack) {
+            state_stack_str += std::to_string(state) + " ";
+        }
+
+        std::string symbol_stack_str = "";
+        for (Symbol symbol : symbol_stack) {
+            symbol_stack_str += symbol.self() + " ";
+        }
+
+        std::string input_str = "";
+        for (size_t i = index; i < input.size(); ++i) {
+            input_str += input[i].self() + " ";
+        }
+
+        std::string action_str;
         auto action_it = action_table_[current_state].find(current_symbol);
         if (action_it == action_table_[current_state].end()) {
+            action_str = "Error: No action for state " + std::to_string(current_state) + " on " + current_symbol.self();
+            std::cout << std::left << std::setw(20) << state_stack_str << std::setw(20) << symbol_stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
             return RC::FAILED;
         }
 
         Move move = action_it->second;
         switch (move.type()) {
-            case Move::MoveType::Jump:
-                std::cout << "jump: " << move.id() << std::endl;
+            case Move::MoveType::Shift:
+                action_str = "Shift to state " + std::to_string(move.id());
                 state_stack.push_back(move.id());
                 symbol_stack.push_back(current_symbol);
                 index++;
                 break;
             case Move::MoveType::Reduce: {
-                std::cout << "reduce: " << move.id() << std::endl;
                 Production prod = augmented_prods_[move.id()];
                 const auto& rhs = prod.right().self();
+                action_str = "Reduce by production: " + prod.to_string();
                 for (size_t i = 0; i < rhs.size(); ++i) {
                     state_stack.pop_back();
                     symbol_stack.pop_back();
                 }
-                int prev_state = state_stack.back();
-                Symbol left = prod.left();
-                auto goto_it = goto_table_[prev_state].find(left);
-                if (goto_it == goto_table_[prev_state].end()) {
+                int new_state = state_stack.back();
+                Symbol left_symbol = prod.left();
+                auto goto_it = goto_table_[new_state].find(left_symbol);
+                if (goto_it == goto_table_[new_state].end()) {
+                    action_str = "Error: No goto for state " + std::to_string(new_state) + " on " + left_symbol.self();
+                    std::cout << std::left << std::setw(20) << state_stack_str << std::setw(20) << symbol_stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
                     return RC::FAILED;
                 }
                 int next_state = goto_it->second;
                 state_stack.push_back(next_state);
-                symbol_stack.push_back(left);
+                symbol_stack.push_back(left_symbol);
                 break;
             }
             case Move::MoveType::End:
-                if (input[index].cmp(END)) {
-                    return RC::SUCCESS;
-                } else {
-                    return RC::FAILED;
-                }
+                action_str = "Accept";
+                std::cout << std::left << std::setw(20) << state_stack_str << std::setw(20) << symbol_stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
+                return RC::SUCCESS;
             default:
+                action_str = "Error: Invalid move type";
+                std::cout << std::left << std::setw(20) << state_stack_str << std::setw(20) << symbol_stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
                 return RC::FAILED;
         }
+        std::cout << std::left << std::setw(20) << state_stack_str << std::setw(20) << symbol_stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
     }
     return RC::FAILED;
 }
@@ -330,7 +418,7 @@ void ParserLR::print_tables() const {
                 if (sym_it != sym_map.end()) {
                     const Move& m = sym_it->second;
                     switch (m.type()) {
-                        case Move::MoveType::Jump:
+                        case Move::MoveType::Shift:
                             cell = "s" + std::to_string(m.id());
                             break;
                         case Move::MoveType::Reduce:

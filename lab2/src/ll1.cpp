@@ -209,41 +209,108 @@ ParserLL1::ParserLL1(std::vector<Production> input) {
 
 ParserLL1::~ParserLL1() {}
 
+// RC ParserLL1::analyse(std::vector<Symbol>& input) {
+//     input.push_back(END);
+//     std::vector<Symbol> stack = {END, Symbol("S", false)};
+
+//     size_t index = 0;
+//     while (!stack.empty()) {
+//         Symbol top = stack.back();
+//         printf("top: %s, ", top.self().c_str());
+//         stack.pop_back();
+//         if (top.cmp(END)) {
+//             if (input[index].cmp(END)) return RC::SUCCESS;
+//             else return RC::FAILED;
+//         }
+
+//         if (top.is_terminal()) {
+//             if (top.cmp(input[index])) {
+//                 ++index;
+//                 printf("\n");
+//             } else {
+//                 return RC::FAILED;
+//             }
+//         } else {
+//             const auto& entry = table[top];
+//             auto it = entry.find(input[index]);
+//             if (it == entry.end()) return RC::FAILED;
+
+//             const auto& prod = it->second;
+//             const auto& rhs = prod.right().self();
+//             printf("use: %s -> %s\n", prod.left().self().c_str(), prod.right().to_string().c_str());
+//             if (rhs.size() == 1 && rhs[0].cmp(EPSILON)) continue;
+//             for (auto it = rhs.rbegin(); it != rhs.rend(); ++it) {
+//                 stack.push_back(*it);
+//             }
+//         }
+//     }
+//     return RC::FAILED;
+// }
+
 RC ParserLL1::analyse(std::vector<Symbol>& input) {
     input.push_back(END);
     std::vector<Symbol> stack = {END, Symbol("S", false)};
 
     size_t index = 0;
+    std::cout << "LL(1) Parsing Process:" << std::endl;
+    std::cout << std::left << std::setw(20) << "Stack" << std::setw(20) << "Input" << std::setw(20) << "Action" << std::endl;
     while (!stack.empty()) {
         Symbol top = stack.back();
-        printf("top: %s, ", top.self().c_str());
         stack.pop_back();
+
+        std::string stack_str = "";
+        for (auto it = stack.rbegin(); it != stack.rend(); ++it) {
+            stack_str += it->self() + " ";
+        }
+        stack_str += top.self();
+
+        std::string input_str = "";
+        for (size_t i = index; i < input.size(); ++i) {
+            input_str += input[i].self() + " ";
+        }
+
+        std::string action_str;
         if (top.cmp(END)) {
-            if (input[index].cmp(END)) return RC::SUCCESS;
-            else return RC::FAILED;
+            if (input[index].cmp(END)) {
+                action_str = "Accept";
+                std::cout << std::left << std::setw(20) << stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
+                return RC::SUCCESS;
+            } else {
+                action_str = "Error";
+                std::cout << std::left << std::setw(20) << stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
+                return RC::FAILED;
+            }
         }
 
         if (top.is_terminal()) {
             if (top.cmp(input[index])) {
+                action_str = "Match " + top.self();
                 ++index;
-                printf("\n");
             } else {
+                action_str = "Error: Mismatch " + top.self() + " and " + input[index].self();
+                std::cout << std::left << std::setw(20) << stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
                 return RC::FAILED;
             }
         } else {
             const auto& entry = table[top];
             auto it = entry.find(input[index]);
-            if (it == entry.end()) return RC::FAILED;
+            if (it == entry.end()) {
+                action_str = "Error: No production for " + top.self() + " on " + input[index].self();
+                std::cout << std::left << std::setw(20) << stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
+                return RC::FAILED;
+            }
 
             const auto& prod = it->second;
             const auto& rhs = prod.right().self();
-            printf("use: %s -> %s\n", prod.left().self().c_str(), prod.right().to_string().c_str());
+            action_str = "Use production: " + prod.to_string();
             if (rhs.size() == 1 && rhs[0].cmp(EPSILON)) continue;
             for (auto it = rhs.rbegin(); it != rhs.rend(); ++it) {
                 stack.push_back(*it);
             }
         }
+        std::cout << std::left << std::setw(20) << stack_str << std::setw(20) << input_str << std::setw(20) << action_str << std::endl;
     }
+    std::cout << std::left << std::setw(20) << "" << std::setw(20) << "" << std::setw(20) << "Error: Stack empty prematurely" << std::endl;
     return RC::FAILED;
 }
 

@@ -225,7 +225,7 @@ class Move {
 public:
     enum class MoveType {
         Start,
-        Jump,
+        Shift,
         Reduce,
         End,
     };
