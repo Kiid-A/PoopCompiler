@@ -14,9 +14,14 @@ TEST_DIR = test
 # 可执行文件名称前缀
 EXECUTABLE_PREFIX = ""
 
+# 自动生成的文件
+GENERATED_SRC = $(SRC_DIR)/lex.cpp $(SRC_DIR)/yacc.cpp
+GENERATED_HEADER = $(SRC_DIR)/lex.h $(SRC_DIR)/yacc.hpp
+
 # 源文件和目标文件
-SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp)
+SRC_FILES = $(wildcard $(SRC_DIR)/*.cpp) $(filter-out $(GENERATED_SRC), $(wildcard $(SRC_DIR)/*.cpp))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(SRC_DIR)/%.o, $(SRC_FILES))
+OBJ_FILES += $(patsubst %.cpp, %.o, $(GENERATED_SRC))
 
 # 测试文件和目标文件
 TEST_FILES = $(wildcard $(TEST_DIR)/*.cpp)
@@ -26,9 +31,14 @@ TEST_OBJS = $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_FILES))
 # 自动生成的依赖文件
 DEPS = $(patsubst $(SRC_DIR)/%.cpp, $(SRC_DIR)/%.d, $(SRC_FILES)) \
        $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%.d, $(TEST_FILES))
+DEPS += $(patsubst %.cpp, %.d, $(GENERATED_SRC))
 
 # 默认目标，生成发布版本
-all: $(TEST_EXECUTABLES)
+all: $(GENERATED_SRC) $(TEST_EXECUTABLES)
+
+# 运行脚本生成 lex 和 yacc 文件
+$(GENERATED_SRC): $(SRC_DIR)/gen.sh $(SRC_DIR)/lex.l $(SRC_DIR)/yacc.y
+	cd $(SRC_DIR) && ./gen.sh
 
 # 链接生成可执行文件
 $(EXECUTABLE_PREFIX)%: $(TEST_DIR)/%.o $(OBJ_FILES)
@@ -38,17 +48,21 @@ $(EXECUTABLE_PREFIX)%: $(TEST_DIR)/%.o $(OBJ_FILES)
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -MMD -MP -c -o $@ $<
 
+# 编译自动生成的源文件
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -MMD -MP -c -o $@ $<
+
 # 编译测试文件
 $(TEST_DIR)/%.o: $(TEST_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(RELEASE_FLAGS) -MMD -MP -c -o $@ $<
 
 # 调试目标
 debug: CXXFLAGS += $(DEBUG_FLAGS)
-debug: $(TEST_EXECUTABLES)
+debug: $(GENERATED_SRC) $(TEST_EXECUTABLES)
 
 # 清理目标
 clean:
-	rm -f $(SRC_DIR)/*.o $(TEST_DIR)/*.o $(TEST_EXECUTABLES) $(DEPS)
+	rm -f $(SRC_DIR)/*.o $(TEST_DIR)/*.o $(TEST_EXECUTABLES) $(DEPS) $(GENERATED_SRC) $(GENERATED_HEADER)
 
 # 包含自动生成的依赖文件
 -include $(DEPS)
