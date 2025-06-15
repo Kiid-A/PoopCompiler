@@ -207,8 +207,7 @@ void Lexer::analyze() {
         //         lines_, buffer_.size(), buffer_[cur_]);
         char c = buffer_[cur_];
         
-        switch (state_) {
-        case RUNNING:
+        if (state_ == RUNNING) {
             if (std::isspace(c)) {
                 if (c == '\n') lines_++;
                 cur_++;
@@ -274,20 +273,6 @@ void Lexer::analyze() {
                 cur_++;
                 chars_++;
             }
-            break;
-
-        case PARSE_INCLUDE:
-            break;
-        case PARSE_CONSTSTR:
-            break;
-        case PARSE_WORD:
-            break;
-        case PARSE_NUM:
-            break;
-        case PARSE_OP:
-            break;
-        case PARSE_COMMENT:
-            break;
         }
     }
     tokens_.emplace_back(TOKEN_EOF, "", lines_);
@@ -339,7 +324,7 @@ void Lexer::PrintTokens() const {
             case TOKEN_PUNCTUATION: type_str = "PUNCTUATION"; break;
             case TOKEN_COMMENT:     type_str = "COMMENT"; break;
             case TOKEN_EOF:         type_str = "EOF"; break;
-            case TOKEN_ERROR:       type_str = "ERROR"; break; // 红色高亮
+            case TOKEN_ERROR:       type_str = "ERROR"; break; 
             default:                type_str = "UNKNOWN";
         }
 

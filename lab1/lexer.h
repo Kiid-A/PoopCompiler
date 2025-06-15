@@ -21,6 +21,7 @@ public:
         TOKEN_ERROR
     };
 
+    // Maybe Unused
     enum State {
         STOP,
         RUNNING,

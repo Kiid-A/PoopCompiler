@@ -67,6 +67,7 @@
         "thread": "c",
         "cinttypes": "c",
         "typeinfo": "c",
-        "__nullptr": "c"
+        "__nullptr": "c",
+        "filesystem": "cpp"
     }
 }
